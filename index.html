@@ -54,6 +54,15 @@
       max-height: 100%;
       max-width: 100%;
     }
+    .ohlc-boxes {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    .ohlc-boxes input {
+      flex: 1;
+      padding: 6px;
+    }
   </style>
 </head>
 <body>
@@ -78,13 +87,23 @@
     <div class="image-drop" contenteditable="true" id="greenImage" onpaste="handlePaste(event, 'greenInput')">
       Paste GREEN image here (Ctrl+V)
     </div>
+    <div class="ohlc-boxes">
+      <input id="greenOpen" placeholder="GREEN Open">
+      <input id="greenHigh" placeholder="GREEN High">
+      <input id="greenLow" placeholder="GREEN Low">
+      <input id="greenClose" placeholder="GREEN Close">
+    </div>
+
     <div class="image-drop" contenteditable="true" id="redImage" onpaste="handlePaste(event, 'redInput')">
       Paste RED image here (Ctrl+V)
     </div>
-    <label><b>GREEN OHLC</b></label>
-    <textarea id="greenInput" rows="2" style="background:#eaffea"></textarea><br><br>
-    <label><b>RED OHLC</b></label>
-    <textarea id="redInput" rows="2" style="background:#ffeaea"></textarea><br><br>
+    <div class="ohlc-boxes">
+      <input id="redOpen" placeholder="RED Open">
+      <input id="redHigh" placeholder="RED High">
+      <input id="redLow" placeholder="RED Low">
+      <input id="redClose" placeholder="RED Close">
+    </div>
+
     <button onclick="compareOHLC()">COMPARE</button><br><br>
     <button onclick="undoLastRow()">UNDO LAST ROW</button><br><br>
     <button onclick="exportToPDF()">Download Table as PDF</button>
@@ -134,47 +153,35 @@
     document.getElementById("ocrSection").style.display = "block";
   }
 
-  function normalizeText(text) {
-    return text
-      .replace(/[^A-Za-z\d.,]/g, '')
-      .replace(/([OHLC])/gi, ' $1')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  function parseOHLC(input) {
-    const fix = str => parseFloat((str || "").replace(/[^0-9.]/g, ""));
-    const o = fix((input.match(/O\s*([\d.,]+)/i) || [])[1]);
-    const h = fix((input.match(/H\s*([\d.,]+)/i) || [])[1]);
-    const l = fix((input.match(/L\s*([\d.,]+)/i) || [])[1]);
-    const c = fix((input.match(/C\s*([\d.,]+)/i) || [])[1]);
-    return { o, h, l, c };
-  }
-
   function compareOHLC() {
-    let val1 = normalizeText(document.getElementById("greenInput").value);
-    let val2 = normalizeText(document.getElementById("redInput").value);
-    if (!val1 || !val2) return alert("Paste both OHLC values.");
+    const g = {
+      o: parseFloat(document.getElementById("greenOpen").value),
+      h: parseFloat(document.getElementById("greenHigh").value),
+      l: parseFloat(document.getElementById("greenLow").value),
+      c: parseFloat(document.getElementById("greenClose").value)
+    };
+    const r = {
+      o: parseFloat(document.getElementById("redOpen").value),
+      h: parseFloat(document.getElementById("redHigh").value),
+      l: parseFloat(document.getElementById("redLow").value),
+      c: parseFloat(document.getElementById("redClose").value)
+    };
 
-    let green = parseOHLC(val1);
-    let red = parseOHLC(val2);
-
-    if ([green.o, green.h, green.l, green.c, red.o, red.h, red.l, red.c].some(x => isNaN(x))) {
-      alert("Invalid OHLC format.");
+    if ([g.o, g.h, g.l, g.c, r.o, r.h, r.l, r.c].some(x => isNaN(x))) {
+      alert("Please fill all OHLC fields.");
       return;
     }
 
     let result = "N";
-
     if (selectedMode === "EVEN") {
-      if (green.c > red.o && green.c < red.h) result = "1";
-      else if (green.c < red.o && green.h > red.o) result = "2";
-      else if (green.c === red.h) result = "E";
-      else if (green.h < red.c) result = "PU";
-      else if (green.c > red.h) result = "PU";
+      if (g.c > r.o && g.c < r.h) result = "1";
+      else if (g.c < r.o && g.h > r.o) result = "2";
+      else if (g.c === r.h) result = "E";
+      else if (g.h < r.c) result = "PU";
+      else if (g.c > r.h) result = "PU";
       else result = "3";
     } else {
-      if (red.o > green.c && red.o < green.h) result = "U";
+      if (r.o > g.c && r.o < g.h) result = "U";
     }
 
     insertResult(selectedColumn, result);
@@ -243,7 +250,7 @@
             'eng',
             { logger: m => console.log(m) }
           ).then(({ data: { text } }) => {
-            const cleaned = normalizeText(text);
+            const cleaned = text.replace(/[^A-Za-z\d.,\s]/g, '');
             document.getElementById(targetId).value = cleaned;
           });
         };
@@ -251,7 +258,7 @@
       }
     }
     if (!hasImage) {
-      alert("Please paste a valid image (e.g., screenshot of OHLC text).");
+      alert("Please paste a valid image (e.g., screenshot of OHLC text). ");
     }
   }
 </script>
