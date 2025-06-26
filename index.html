@@ -135,7 +135,11 @@
   }
 
   function normalizeText(text) {
-    return text.replace(/\s+/g, "").replace(/O/gi, " O").replace(/H/gi, " H").replace(/L/gi, " L").replace(/C/gi, " C");
+    return text
+      .replace(/[^A-Za-z\d.,]/g, '')
+      .replace(/([OHLC])/gi, ' $1')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function parseOHLC(input) {
@@ -239,14 +243,15 @@
             'eng',
             { logger: m => console.log(m) }
           ).then(({ data: { text } }) => {
-            document.getElementById(targetId).value = text.trim();
+            const cleaned = normalizeText(text);
+            document.getElementById(targetId).value = cleaned;
           });
         };
         reader.readAsDataURL(blob);
       }
     }
     if (!hasImage) {
-      alert("Please paste a valid image (e.g., screenshot of OHLC text)." );
+      alert("Please paste a valid image (e.g., screenshot of OHLC text).");
     }
   }
 </script>
