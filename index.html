@@ -1,255 +1,245 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GANESAN STORE</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <style>
     body {
-      display: flex;
       font-family: Arial, sans-serif;
+      display: flex;
       margin: 0;
     }
-    .left-panel {
-      width: 30%;
+    #leftPanel {
+      width: 300px;
       padding: 20px;
-      background-color: #f0f0f0;
+      background: #f0f0f0;
     }
-    .right-panel {
-      width: 70%;
+    #main {
+      flex: 1;
       padding: 20px;
-      overflow-x: auto;
+    }
+    h1 {
+      font-size: 28px;
+    }
+    button {
+      padding: 10px;
+      margin: 5px;
+    }
+    .active {
+      background-color: lightgreen;
+    }
+    .highlight {
+      background-color: #0099cc;
+      color: white;
+    }
+    .dropzone {
+      width: 100%;
+      height: 100px;
+      border: 2px dashed #ccc;
+      margin: 10px 0;
+      text-align: center;
+      line-height: 100px;
+      color: #999;
+      position: relative;
+    }
+    input[type="text"] {
+      width: 90%;
+      margin: 5px 0;
+    }
+    table, th, td {
+      border: 1px solid #999;
+      border-collapse: collapse;
+      text-align: center;
     }
     table {
       width: 100%;
-      border-collapse: collapse;
     }
-    th, td {
-      border: 1px solid #999;
-      padding: 10px;
-      text-align: center;
-    }
-    button {
-      margin: 5px;
-      padding: 10px;
-    }
-    input[type="text"], input[type="file"] {
-      width: 100%;
-      padding: 6px;
-    }
-    .ohlc-boxes {
-      display: flex;
-      gap: 5px;
-      margin: 10px 0;
-    }
-    .ohlc-boxes input {
-      flex: 1;
+    td {
+      height: 30px;
     }
   </style>
 </head>
 <body>
-
-<div class="left-panel">
-  <h1>GANESAN STORE</h1>
-
-  <div id="selectorButtons">
-    <button onclick="selectBox(0)">1</button>
-    <button onclick="selectBox(1)">3</button>
-    <button onclick="selectBox(2)">5</button>
-    <button onclick="selectBox(3)">15</button>
-  </div>
-
-  <div id="modeButtons" style="display:none;">
-    <button onclick="selectMode('EVEN')">EVEN</button>
-    <button onclick="selectMode('UNEVEN')">UNEVEN</button>
-  </div>
-
-  <div id="ocrSection" style="display:none;">
-    <h3>GREEN OHLC</h3>
-    <input type="file" accept="image/*" onchange="handleFile(this.files[0], true)">
-    <div class="ohlc-boxes">
-      <input id="greenOpen" placeholder="Open">
-      <input id="greenHigh" placeholder="High">
-      <input id="greenLow" placeholder="Low">
-      <input id="greenClose" placeholder="Close">
+  <div id="leftPanel">
+    <h1>GANESAN STORE</h1>
+    <div>
+      <button onclick="selectColumn(1)">1</button>
+      <button onclick="selectColumn(3)">3</button>
+      <button onclick="selectColumn(5)">5</button>
+      <button onclick="selectColumn(15)">15</button>
+    </div>
+    <div>
+      <button id="evenBtn" onclick="toggleEven(true)">EVEN</button>
+      <button id="unevenBtn" onclick="toggleEven(false)">UNEVEN</button>
     </div>
 
-    <h3>RED OHLC</h3>
-    <input type="file" accept="image/*" onchange="handleFile(this.files[0], false)">
-    <div class="ohlc-boxes">
-      <input id="redOpen" placeholder="Open">
-      <input id="redHigh" placeholder="High">
-      <input id="redLow" placeholder="Low">
-      <input id="redClose" placeholder="Close">
+    <h3>Paste Image Below</h3>
+
+    <div class="dropzone" id="greenDrop" onpaste="handlePaste(event, 'green')">
+      Paste GREEN image here (Ctrl+V)
     </div>
+    <input type="text" id="greenOpen" placeholder="GREEN Open"/>
+    <input type="text" id="greenHigh" placeholder="GREEN High"/>
+    <input type="text" id="greenLow" placeholder="GREEN Low"/>
+    <input type="text" id="greenClose" placeholder="GREEN Close"/>
 
-    <button onclick="compareOHLC()">COMPARE</button><br><br>
-    <button onclick="undoLastRow()">UNDO LAST ROW</button><br><br>
-    <button onclick="exportToPDF()">Download Table as PDF</button>
+    <div class="dropzone" id="redDrop" onpaste="handlePaste(event, 'red')">
+      Paste RED image here (Ctrl+V)
+    </div>
+    <input type="text" id="redOpen" placeholder="RED Open"/>
+    <input type="text" id="redHigh" placeholder="RED High"/>
+    <input type="text" id="redLow" placeholder="RED Low"/>
+    <input type="text" id="redClose" placeholder="RED Close"/>
+
+    <button onclick="compareValues()">COMPARE</button>
   </div>
-</div>
 
-<div class="right-panel">
-  <table id="resultTable">
-    <thead>
-      <tr><th>1</th><th>3</th><th>5</th><th>15</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+  <div id="main">
+    <table>
+      <thead>
+        <tr>
+          <th>1</th>
+          <th>3</th>
+          <th>5</th>
+          <th>15</th>
+        </tr>
+      </thead>
+      <tbody id="dataTable">
+        <!-- Rows will be added here -->
+      </tbody>
+    </table>
+  </div>
 
 <script>
-  let selectedColumn = null;
-  let selectedMode = null;
-  let previousResults = [[], [], [], []];
-  let currentRowIndex = 0;
+let selectedColumn = 1;
+let evenSelected = null;
+let rowCounter = 0;
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const tbody = document.querySelector("#resultTable tbody");
-    for (let i = 0; i < 20; i++) {
-      const tr = document.createElement("tr");
-      for (let j = 0; j < 4; j++) {
-        const td = document.createElement("td");
-        td.contentEditable = true;
-        tr.appendChild(td);
-      }
-      tbody.appendChild(tr);
-    }
+function selectColumn(col) {
+  selectedColumn = col;
+  document.querySelectorAll("th").forEach(th => {
+    th.style.background = (th.textContent == col) ? "lightgreen" : "white";
   });
+}
 
-  function selectBox(index) {
-    selectedColumn = index;
-    selectedMode = null;
-    document.querySelectorAll("#selectorButtons button").forEach((btn, i) =>
-      btn.style.backgroundColor = i === index ? "#2ecc71" : ""
-    );
-    document.getElementById("modeButtons").style.display = "block";
-  }
+function toggleEven(isEven) {
+  evenSelected = isEven;
+  document.getElementById("evenBtn").classList.toggle("highlight", isEven);
+  document.getElementById("unevenBtn").classList.toggle("highlight", !isEven);
+}
 
-  function selectMode(mode) {
-    selectedMode = mode;
-    document.getElementById("ocrSection").style.display = "block";
-  }
-
-  function compareOHLC() {
-    const g = {
-      o: parseFloat(document.getElementById("greenOpen").value),
-      h: parseFloat(document.getElementById("greenHigh").value),
-      l: parseFloat(document.getElementById("greenLow").value),
-      c: parseFloat(document.getElementById("greenClose").value)
-    };
-    const r = {
-      o: parseFloat(document.getElementById("redOpen").value),
-      h: parseFloat(document.getElementById("redHigh").value),
-      l: parseFloat(document.getElementById("redLow").value),
-      c: parseFloat(document.getElementById("redClose").value)
-    };
-
-    if ([g.o, g.h, g.l, g.c, r.o, r.h, r.l, r.c].some(x => isNaN(x))) {
-      alert("Please fill all OHLC fields.");
-      return;
+function handlePaste(event, target) {
+  const items = event.clipboardData.items;
+  for (const item of items) {
+    if (item.type.indexOf("image") !== -1) {
+      const blob = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        processImage(e.target.result, target);
+      };
+      reader.readAsDataURL(blob);
     }
+  }
+}
 
-    let result = "N";
+function processImage(dataUrl, zone) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
 
-    if (selectedMode === "EVEN") {
-      if (g.c > r.o && g.c < r.h) result = "1";
-      else if (g.c < r.o && g.h > r.o) result = "2";
-      else if (g.c === r.h) result = "E";
-      else if (g.h < r.c || g.c > r.h) result = "PU";
-      else result = "3";
-    } else if (selectedMode === "UNEVEN") {
-      if (r.o > g.c && r.o < g.h) result = "U";
+    // Crop OHLC area from tooltip (assumes it's approx. middle)
+    const cropX = img.width / 3;
+    const cropY = img.height / 3;
+    const cropWidth = img.width / 3;
+    const cropHeight = img.height / 4;
+
+    const cropped = ctx.getImageData(cropX, cropY, cropWidth, cropHeight);
+
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = cropWidth;
+    tempCanvas.height = cropHeight;
+    const tctx = tempCanvas.getContext("2d");
+    tctx.putImageData(cropped, 0, 0);
+
+    // Convert to grayscale (optional)
+    const imgData = tctx.getImageData(0, 0, cropWidth, cropHeight);
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      const avg = (imgData.data[i] + imgData.data[i+1] + imgData.data[i+2]) / 3;
+      imgData.data[i] = imgData.data[i+1] = imgData.data[i+2] = avg;
     }
+    tctx.putImageData(imgData, 0, 0);
 
-    insertResult(selectedColumn, result);
-  }
-
-  function insertResult(colIndex, result) {
-    const table = document.getElementById("resultTable");
-    const row = table.rows[currentRowIndex + 1];
-    if (!row) return alert("All 20 rows filled.");
-
-    row.cells[colIndex].innerText = result;
-    previousResults[colIndex][currentRowIndex] = result;
-
-    for (let i = 0; i < 4; i++) {
-      if (i !== colIndex && !row.cells[i].innerText) {
-        const prev = previousResults[i][currentRowIndex - 1] || "";
-        row.cells[i].innerText = prev;
-      }
-    }
-    currentRowIndex++;
-  }
-
-  function undoLastRow() {
-    if (currentRowIndex === 0) return;
-    const table = document.getElementById("resultTable");
-    const row = table.rows[currentRowIndex];
-    for (let i = 0; i < 4; i++) {
-      row.cells[i].innerText = "";
-    }
-    currentRowIndex--;
-  }
-
-  async function exportToPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    let y = 10;
-    doc.setFontSize(12);
-    doc.text("GANESAN STORE - Results", 10, y);
-    y += 10;
-
-    const headers = ["1", "3", "5", "15"];
-    doc.text(headers.join("    "), 10, y);
-    y += 10;
-
-    const table = document.getElementById("resultTable");
-    for (let i = 1; i < table.rows.length; i++) {
-      const row = table.rows[i];
-      const values = Array.from(row.cells).map(cell => cell.innerText || "");
-      doc.text(values.join("    "), 10, y);
-      y += 10;
-    }
-    doc.save("results.pdf");
-  }
-
-  function handleFile(file, isGreen) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = new Image();
-      img.onload = () => extractOHLCFromImage(img, isGreen);
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function extractOHLCFromImage(image, isGreen) {
-    Tesseract.recognize(image, 'eng', {
+    Tesseract.recognize(tempCanvas.toDataURL(), 'eng', {
       logger: m => console.log(m)
     }).then(({ data: { text } }) => {
-      const regex = /Open\s*([\d,]+\.\d+)[\s\S]*?High\s*([\d,]+\.\d+)[\s\S]*?Low\s*([\d,]+\.\d+)[\s\S]*?Close\s*([\d,]+\.\d+)/i;
-      const match = text.match(regex);
-      if (match) {
-        const [_, o, h, l, c] = match.map(x => x.replace(/,/g, ""));
-        if (isGreen) {
-          document.getElementById("greenOpen").value = o;
-          document.getElementById("greenHigh").value = h;
-          document.getElementById("greenLow").value = l;
-          document.getElementById("greenClose").value = c;
-        } else {
-          document.getElementById("redOpen").value = o;
-          document.getElementById("redHigh").value = h;
-          document.getElementById("redLow").value = l;
-          document.getElementById("redClose").value = c;
-        }
-      } else {
-        alert("Could not extract all OHLC values from the image.");
-      }
+      console.log("OCR Text:", text);
+      extractOHLC(text, zone);
     });
-  }
-</script>
+  };
+  img.src = dataUrl;
+}
 
+function extractOHLC(text, zone) {
+  const open = /Open\s+([0-9,]+\.\d+)/i.exec(text);
+  const high = /High\s+([0-9,]+\.\d+)/i.exec(text);
+  const low = /Low\s+([0-9,]+\.\d+)/i.exec(text);
+  const close = /Close\s+([0-9,]+\.\d+)/i.exec(text);
+
+  if (open && high && low && close) {
+    document.getElementById(`${zone}Open`).value = open[1].replace(/,/g, '');
+    document.getElementById(`${zone}High`).value = high[1].replace(/,/g, '');
+    document.getElementById(`${zone}Low`).value = low[1].replace(/,/g, '');
+    document.getElementById(`${zone}Close`).value = close[1].replace(/,/g, '');
+  } else {
+    alert("Could not extract all OHLC values from image.");
+  }
+}
+
+function compareValues() {
+  const gOpen = parseFloat(document.getElementById("greenOpen").value);
+  const gHigh = parseFloat(document.getElementById("greenHigh").value);
+  const gLow = parseFloat(document.getElementById("greenLow").value);
+  const gClose = parseFloat(document.getElementById("greenClose").value);
+
+  const rOpen = parseFloat(document.getElementById("redOpen").value);
+  const rHigh = parseFloat(document.getElementById("redHigh").value);
+  const rLow = parseFloat(document.getElementById("redLow").value);
+  const rClose = parseFloat(document.getElementById("redClose").value);
+
+  let result = "N";
+  if (evenSelected === true) {
+    if (gClose > rOpen && rOpen > gHigh) result = "U";
+    else if (rClose > gOpen && gOpen > rHigh) result = "D";
+  } else if (evenSelected === false) {
+    if (rClose > gOpen && gOpen > rHigh) result = "U";
+    else if (gClose > rOpen && rOpen > gHigh) result = "D";
+  }
+
+  insertResult(result);
+}
+
+function insertResult(val) {
+  const row = document.getElementById("dataTable").rows[rowCounter];
+  if (!row) {
+    const newRow = document.createElement("tr");
+    for (let i = 0; i < 4; i++) {
+      const cell = document.createElement("td");
+      newRow.appendChild(cell);
+    }
+    document.getElementById("dataTable").appendChild(newRow);
+  }
+  document.getElementById("dataTable").rows[rowCounter].cells[
+    {1:0, 3:1, 5:2, 15:3}[selectedColumn]
+  ].textContent = val;
+
+  rowCounter = (rowCounter + 1) % 20; // Wrap after 20
+}
+</script>
 </body>
 </html>
