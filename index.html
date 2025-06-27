@@ -1,142 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>GANESAN STORE</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <style>
-    body { font-family: Arial; display: flex; }
-    .left { width: 30%; padding: 20px; background: #f0f0f0; }
-    .right { width: 70%; padding: 20px; }
-    button { margin: 5px; padding: 10px; }
-    .image-box { border: 2px dashed gray; width: 100%; height: 100px; margin: 5px 0; position: relative; text-align: center; }
-    .image-box img { max-height: 100px; }
-    input { width: 130px; margin: 5px; }
-    textarea { width: 100%; margin-top: 10px; font-size: 12px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    td, th { border: 1px solid #000; text-align: center; height: 25px; }
-    th { background: #eee; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+    }
+    .left-panel {
+      width: 25%;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    .right-panel {
+      width: 75%;
+      padding: 20px;
+      overflow-x: auto;
+    }
+    .heading {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .button-group button {
+      margin: 5px;
+      width: 40px;
+      height: 40px;
+    }
+    .even-uneven {
+      margin-top: 10px;
+    }
+    .image-paste-area {
+      border: 2px dashed #ccc;
+      height: 100px;
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .image-paste-area img {
+      max-height: 100px;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 5px;
+      text-align: center;
+      height: 30px;
+    }
+    input[type="text"] {
+      width: 100px;
+      margin: 2px;
+    }
+    .compare-button {
+      margin-top: 10px;
+    }
+    .highlight {
+      background-color: #90ee90;
+    }
   </style>
 </head>
 <body>
-  <div class="left">
-    <h1>GANESAN STORE</h1>
-    <div>
-      <button onclick="selectCol(1)">1</button>
-      <button onclick="selectCol(3)">3</button>
-      <button onclick="selectCol(5)">5</button>
-      <button onclick="selectCol(15)">15</button>
-    </div>
-    <div>
-      <button onclick="setEven()">EVEN</button>
-      <button onclick="setUneven()">UNEVEN</button>
+  <div class="left-panel">
+    <div class="heading">GANESAN STORE</div>
+    <div class="button-group">
+      <button onclick="selectBox(1)">1</button>
+      <button onclick="selectBox(3)">3</button>
+      <button onclick="selectBox(5)">5</button>
+      <button onclick="selectBox(15)">15</button>
     </div>
 
-    <h3>Paste Image Below</h3>
+    <div class="even-uneven" id="even-uneven-buttons" style="display: none;">
+      <button onclick="setMode('EVEN')">EVEN</button>
+      <button onclick="setMode('UNEVEN')">UNEVEN</button>
+    </div>
 
-    <div id="greenBox" class="image-box" onpaste="handlePaste(event, 'GREEN')">Paste GREEN image here<br>(Ctrl+V)</div>
-    <input id="GREENOpen" placeholder="GREEN Open">
-    <input id="GREENHigh" placeholder="GREEN High">
-    <input id="GREENLow" placeholder="GREEN Low">
-    <input id="GREENClose" placeholder="GREEN Close">
+    <h4>Paste Image Below</h4>
+    <div class="image-paste-area" onpaste="handlePaste(event, 'GREEN')" id="greenPaste">
+      Paste GREEN image here<br>(Ctrl+V)
+      <img id="greenImage" />
+    </div>
+    <input id="greenOpen" placeholder="GREEN Open" />
+    <input id="greenHigh" placeholder="GREEN High" />
+    <input id="greenLow" placeholder="GREEN Low" />
+    <input id="greenClose" placeholder="GREEN Close" />
 
-    <div id="redBox" class="image-box" onpaste="handlePaste(event, 'RED')">Paste RED image here<br>(Ctrl+V)</div>
-    <input id="REDOpen" placeholder="RED Open">
-    <input id="REDHigh" placeholder="RED High">
-    <input id="REDLow" placeholder="RED Low">
-    <input id="REDClose" placeholder="RED Close">
+    <div class="image-paste-area" onpaste="handlePaste(event, 'RED')" id="redPaste">
+      Paste RED image here<br>(Ctrl+V)
+      <img id="redImage" />
+    </div>
+    <input id="redOpen" placeholder="RED Open" />
+    <input id="redHigh" placeholder="RED High" />
+    <input id="redLow" placeholder="RED Low" />
+    <input id="redClose" placeholder="RED Close" />
 
-    <button onclick="compare()">COMPARE</button>
-    <textarea id="ocrOutput" rows="4" placeholder="OCR debug output here..."></textarea>
+    <div class="compare-button">
+      <button onclick="compare()">COMPARE</button>
+    </div>
   </div>
 
-  <div class="right">
-    <table>
-      <tr><th>1</th><th>3</th><th>5</th><th>15</th></tr>
-      <!-- 20 rows -->
-      <script>
-        for (let i = 0; i < 20; i++) {
-          document.write('<tr><td></td><td></td><td></td><td></td></tr>');
-        }
-      </script>
-    </table>
+  <div class="right-panel">
+    <div class="table-container">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>1</th>
+            <th>3</th>
+            <th>5</th>
+            <th>15</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- 20 rows dynamically inserted -->
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <script>
-    function handlePaste(event, type) {
-      event.preventDefault();
-      const items = event.clipboardData.items;
-      for (const item of items) {
-        if (item.type.indexOf("image") !== -1) {
-          const blob = item.getAsFile();
-          const reader = new FileReader();
-          reader.onload = function(evt) {
-            const base64 = evt.target.result;
-            document.getElementById(type.toLowerCase() + "Box").innerHTML = `<img src="${base64}">`;
-            runOCR(base64, type);
-          };
-          reader.readAsDataURL(blob);
+    let selectedColumn = null;
+    let mode = null;
+    let rowIndex = 0;
+
+    // Initialize 20 rows
+    window.onload = () => {
+      const tbody = document.getElementById('tableBody');
+      for (let i = 0; i < 20; i++) {
+        const row = document.createElement('tr');
+        for (let j = 0; j < 4; j++) {
+          const cell = document.createElement('td');
+          row.appendChild(cell);
         }
+        tbody.appendChild(row);
       }
-    }
+    };
 
-    function runOCR(imageSrc, type) {
-      Tesseract.recognize(imageSrc, 'eng').then(({ data: { text } }) => {
-        document.getElementById("ocrOutput").value = text;
+    function selectBox(value) {
+      selectedColumn = [1, 3, 5, 15].indexOf(value);
+      document.getElementById('even-uneven-buttons').style.display = 'block';
 
-        const cleaned = text.replace(/[^A-Za-z\d.,:\n\s]/g, '');
-        const numbers = cleaned.match(/\d{2,3}[,\.]\d{3}[,\.]?\d{0,2}/g);
-
-        if (numbers && numbers.length >= 4) {
-          document.getElementById(type + "Open").value = numbers[0];
-          document.getElementById(type + "High").value = numbers[1];
-          document.getElementById(type + "Low").value = numbers[2];
-          document.getElementById(type + "Close").value = numbers[3];
-        } else {
-          const lower = text.toLowerCase();
-          const extractValue = (label) => {
-            const match = new RegExp(label + '[:\\s]*([\\d,\\.]+)', 'i').exec(lower);
-            return match ? match[1] : '';
-          };
-
-          const open = extractValue("open");
-          const high = extractValue("high");
-          const low = extractValue("low");
-          const close = extractValue("close");
-
-          if (open && high && low && close) {
-            document.getElementById(type + "Open").value = open;
-            document.getElementById(type + "High").value = high;
-            document.getElementById(type + "Low").value = low;
-            document.getElementById(type + "Close").value = close;
-          } else {
-            alert("Could not extract all OHLC values from image.");
-          }
-        }
+      // Highlight selected column
+      const headers = document.querySelectorAll("th");
+      headers.forEach((th, idx) => {
+        th.classList.toggle("highlight", idx === selectedColumn);
       });
     }
 
-    function compare() {
-      const gClose = parseFloat(document.getElementById("GREENClose").value.replace(/,/g, ''));
-      const rOpen = parseFloat(document.getElementById("REDOpen").value.replace(/,/g, ''));
-      const gHigh = parseFloat(document.getElementById("GREENHigh").value.replace(/,/g, ''));
-      if (gClose > rOpen && rOpen > gHigh) {
-        alert("U");
-      } else {
-        alert("N");
+    function setMode(val) {
+      mode = val;
+    }
+
+    function handlePaste(event, color) {
+      const items = event.clipboardData.items;
+      for (const item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          const file = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            const img = document.getElementById(color.toLowerCase() + "Image");
+            img.src = evt.target.result;
+            runOCR(img, color);
+          };
+          reader.readAsDataURL(file);
+        }
       }
     }
 
-    function selectCol(col) {
-      alert("Selected column: " + col);
+    function runOCR(img, color) {
+      Tesseract.recognize(img.src, 'eng').then(({ data: { text } }) => {
+        const open = extractValue(text, /O\d{2},?[\d.]+/);
+        const high = extractValue(text, /H\d{2},?[\d.]+/);
+        const low = extractValue(text, /L\d{2},?[\d.]+/);
+        const close = extractValue(text, /C\d{2},?[\d.]+/);
+
+        if (!open || !high || !low || !close) {
+          alert("Could not extract all OHLC values from image.");
+          return;
+        }
+
+        document.getElementById(color.toLowerCase() + "Open").value = open;
+        document.getElementById(color.toLowerCase() + "High").value = high;
+        document.getElementById(color.toLowerCase() + "Low").value = low;
+        document.getElementById(color.toLowerCase() + "Close").value = close;
+      });
     }
 
-    function setEven() {
-      alert("Even selected");
+    function extractValue(text, regex) {
+      const match = text.match(regex);
+      if (!match) return '';
+      const value = match[0].split(',')[1];
+      return value ? value.trim() : '';
     }
 
-    function setUneven() {
-      alert("Uneven selected");
+    function compare() {
+      const go = parseFloat(document.getElementById("greenOpen").value);
+      const gh = parseFloat(document.getElementById("greenHigh").value);
+      const gl = parseFloat(document.getElementById("greenLow").value);
+      const gc = parseFloat(document.getElementById("greenClose").value);
+
+      const ro = parseFloat(document.getElementById("redOpen").value);
+      const rh = parseFloat(document.getElementById("redHigh").value);
+      const rl = parseFloat(document.getElementById("redLow").value);
+      const rc = parseFloat(document.getElementById("redClose").value);
+
+      if (isNaN(go) || isNaN(gh) || isNaN(gl) || isNaN(gc) ||
+          isNaN(ro) || isNaN(rh) || isNaN(rl) || isNaN(rc)) {
+        alert("Missing or invalid OHLC values");
+        return;
+      }
+
+      let result = "N";
+
+      if (mode === "EVEN") {
+        if (gc > ro && ro > gh) result = "U";
+      } else if (mode === "UNEVEN") {
+        if (rc > go && go > rh) result = "PH";
+        else if (rc < go && go < rl) result = "PL";
+      }
+
+      // Fill in result in table
+      const table = document.getElementById("dataTable");
+      const row = table.rows[rowIndex + 1]; // +1 because first row is header
+      if (row && row.cells[selectedColumn]) {
+        row.cells[selectedColumn].innerText = result;
+      }
+
+      // Rotate row index after 20
+      rowIndex = (rowIndex + 1) % 20;
     }
   </script>
 </body>
