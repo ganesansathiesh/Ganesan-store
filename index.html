@@ -84,7 +84,7 @@
 
   <div id="ocrSection" style="display:none; margin-top:15px;">
     <h3>Paste Image Below</h3>
-    <div class="image-drop" contenteditable="true" id="greenImage" onpaste="handlePaste(event, 'greenInput')">
+    <div class="image-drop" contenteditable="true" id="greenImage" onpaste="handlePaste(event, 'green')">
       Paste GREEN image here (Ctrl+V)
     </div>
     <div class="ohlc-boxes">
@@ -94,7 +94,7 @@
       <input id="greenClose" placeholder="GREEN Close">
     </div>
 
-    <div class="image-drop" contenteditable="true" id="redImage" onpaste="handlePaste(event, 'redInput')">
+    <div class="image-drop" contenteditable="true" id="redImage" onpaste="handlePaste(event, 'red')">
       Paste RED image here (Ctrl+V)
     </div>
     <div class="ohlc-boxes">
@@ -236,30 +236,45 @@
     doc.save("results.pdf");
   }
 
-  function handlePaste(event, targetId) {
+  function handlePaste(event, type) {
     const clipboardItems = event.clipboardData.items;
-    let hasImage = false;
     for (let item of clipboardItems) {
       if (item.type.indexOf("image") === 0) {
-        hasImage = true;
         const blob = item.getAsFile();
         const reader = new FileReader();
         reader.onload = function (e) {
-          Tesseract.recognize(
-            e.target.result,
-            'eng',
-            { logger: m => console.log(m) }
-          ).then(({ data: { text } }) => {
-            const cleaned = text.replace(/[^A-Za-z\d.,\s]/g, '');
-            document.getElementById(targetId).value = cleaned;
-          });
+          Tesseract.recognize(e.target.result, 'eng', { logger: m => console.log(m) })
+            .then(({ data: { text } }) => {
+              const cleaned = text.replace(/[^A-Za-z\d.,:\n\s]/g, '');
+              const lines = cleaned.split('\n');
+              let data = {};
+              lines.forEach(line => {
+                if (line.toLowerCase().includes("open")) {
+                  data.open = line.match(/\d{2,}[.,]\d{2}/)?.[0];
+                } else if (line.toLowerCase().includes("high")) {
+                  data.high = line.match(/\d{2,}[.,]\d{2}/)?.[0];
+                } else if (line.toLowerCase().includes("low")) {
+                  data.low = line.match(/\d{2,}[.,]\d{2}/)?.[0];
+                } else if (line.toLowerCase().includes("close")) {
+                  data.close = line.match(/\d{2,}[.,]\d{2}/)?.[0];
+                }
+              });
+
+              if (data.open && data.high && data.low && data.close) {
+                document.getElementById(type + "Open").value = data.open;
+                document.getElementById(type + "High").value = data.high;
+                document.getElementById(type + "Low").value = data.low;
+                document.getElementById(type + "Close").value = data.close;
+              } else {
+                alert("Could not extract all OHLC values from image.");
+              }
+            });
         };
         reader.readAsDataURL(blob);
+        return;
       }
     }
-    if (!hasImage) {
-      alert("Please paste a valid image (e.g., screenshot of OHLC text). ");
-    }
+    alert("Please paste a valid image (e.g., screenshot of OHLC text). ");
   }
 </script>
 
